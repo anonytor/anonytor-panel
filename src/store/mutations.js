@@ -1,6 +1,8 @@
 const mutations = {
-  updateConnectionInfo (state, { serverUrl, token }) {
+  updateServerUrl (state, serverUrl) {
     state.serverUrl = serverUrl
+  },
+  updateToken (state, token) {
     state.token = token
   }
 }

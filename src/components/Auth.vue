@@ -11,12 +11,12 @@
         <a-row>
           <a-spin :spinning="isLoading" tip="正在验证">
             <a-card>
-              <a-form-model :model="info" layout="vertical">
+              <a-form-model layout="vertical">
                 <a-form-model-item label="服务器地址">
-                  <a-input v-model="info.serverUrl" :disabled="isLoading"></a-input>
+                  <a-input v-model="serverUrl" :disabled="isLoading"></a-input>
                 </a-form-model-item>
                 <a-form-model-item label="Token">
-                  <a-input v-model="info.token" :disabled="isLoading"></a-input>
+                  <a-input v-model="token" :disabled="isLoading"></a-input>
                 </a-form-model-item>
                 <a-form-model-item>
                   <a-button type="primary" @click="auth" style="width: 100%" :disabled="isLoading">连接</a-button>
@@ -31,28 +31,48 @@
 </template>
 
 <script>
+import api from '../api'
 import Logo from './Logo'
 export default {
   name: 'Auth',
   components: { Logo },
   data () {
     return {
-      isLoading: false,
-      info: {
-        serverUrl: 'http://127.0.0.1:8888',
-        token: ''
-      }
+      isLoading: false
     }
   },
   methods: {
     auth () {
       this.isLoading = true
-      setTimeout(() => {
-        this.$store.commit('updateConnectionInfo', this.info)
-        this.$message.success('验证成功，等待跳转')
-        this.$router.push({ name: 'dashboard' })
-        this.isLoading = false
-      }, 2000)
+      api.ping()
+        .then(() => {
+          this.$message.success('验证成功，等待跳转')
+          this.$router.push({ name: 'dashboard' })
+          this.isLoading = false
+        })
+        .catch(err => {
+          console.log(err)
+          this.$message.error('验证失败，请检查信息')
+          this.isLoading = false
+        })
+    }
+  },
+  computed: {
+    serverUrl: {
+      get () {
+        return this.$store.state.serverUrl
+      },
+      set (val) {
+        this.$store.commit('updateServerUrl', val)
+      }
+    },
+    token: {
+      get () {
+        return this.$store.state.token
+      },
+      set (val) {
+        this.$store.commit('updateToken', val)
+      }
     }
   }
 }

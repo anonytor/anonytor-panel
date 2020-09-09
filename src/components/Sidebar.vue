@@ -1,6 +1,7 @@
 <template>
   <div>
-    <div class="logo">
+    <div class="logo" :style="{ fontSize }">
+      Anonytor Panel
     </div>
     <a-menu theme="dark" :selected-keys="[ $route.name ]" @click="redirect">
       <a-menu-item key="dashboard">
@@ -22,9 +23,17 @@
 <script>
 export default {
   name: 'Sidebar',
+  props: {
+    collapsed: Boolean
+  },
   methods: {
     redirect ({ key }) {
       this.$router.push({ name: key })
+    }
+  },
+  computed: {
+    fontSize () {
+      return this.collapsed ? '14px' : '24px'
     }
   }
 }
@@ -32,9 +41,8 @@ export default {
 
 <style scoped>
 .logo {
-  background-color: dimgray;
+  color: white;
   height: 28px;
-  font-size: 24px;
   margin: 16px;
 }
 </style>
