@@ -3,7 +3,7 @@ import store from '../store'
 
 export function createApi (path, method, data, query) {
   const { serverUrl, token } = store.state
-  let url = `${serverUrl}${path}`
+  let url = `http://${serverUrl}${path}`
   if (typeof query !== 'undefined') {
     url += '?' + new URLSearchParams(query).toString()
   }

@@ -47,7 +47,12 @@
             :tab-list="tabList"
             :active-tab-key="activeTabKey" @tabChange="key => activeTabKey = key">
             <template v-if="host.status">
-              <template v-if="activeTabKey === 'windowsFile'">
+              <template v-if="activeTabKey === 'getClipboardText'">
+                <a-button type="primary" size="large" style="width: 100%" @click="getClipboard">获取剪切板</a-button>
+                <a-divider/>
+                <a-textarea rows="4" v-model="clipboardData" allowClear style="width: 100%"/>
+              </template>
+              <template v-else-if="activeTabKey === 'windowsFile'">
                 <a-row class="control-field">
                   <a-input-search placeholder="文件/目录路径" size="large">
                     <a-button slot="enterButton" type="primary">
@@ -133,22 +138,27 @@ export default {
       isDownloadAgentVisible: false,
       host: {},
       connections: [],
+      clipboardData: '',
       windowsControlTabList: [
         {
-          key: 'windowsFile',
-          tab: '文件'
+          key: 'getClipboardText',
+          tab: '剪切板'
         },
         {
           key: 'windowsKeyboard',
           tab: '键盘'
         },
         {
+          key: 'windowsCommand',
+          tab: '命令'
+        },
+        {
           key: 'windowsScreen',
           tab: '屏幕'
         },
         {
-          key: 'windowsCommand',
-          tab: '命令'
+          key: 'windowsFile',
+          tab: '文件'
         }
       ],
       androidControlTabList: [
@@ -180,6 +190,7 @@ export default {
         .then(res => {
           this.activeTabKey = this.host.os_type === 0 ? 'windowsFile' : 'androidFile'
           this.host = res.data.host
+          this.host.status = true
           this.loadConnection()
         })
         .catch(err => {
@@ -219,6 +230,12 @@ export default {
         })
         .finally(() => {
           this.isDeleting = false
+        })
+    },
+    getClipboard () {
+      api.task.getClipboard(this.id)
+        .then(res => {
+          this.clipboardData = res.data.params
         })
     }
   },
