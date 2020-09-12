@@ -7,7 +7,9 @@ import 'ant-design-vue/dist/antd.css'
 import App from './App'
 import router from './router'
 import store from './store'
+import $const from './const'
 
+Vue.prototype.$const = $const
 Vue.config.productionTip = false
 Vue.use(Antd)
 

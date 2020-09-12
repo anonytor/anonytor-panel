@@ -23,7 +23,7 @@
              :footer="null"
              :visible="isDownloadAgentVisible"
              @cancel="isDownloadAgentVisible = false">
-      <DownloadAgent :id="activeDownloadAgentId"/>
+      <DownloadAgent :id="activeDownloadAgentId" :os="activeDownloadAgentOs"/>
     </a-modal>
     <a-row class="row">
       <a-table :data-source="hosts" row-key="id" :loading="isLoading">
@@ -34,7 +34,12 @@
         </a-table-column>
         <a-table-column key="name" title="名称" data-index="name"/>
         <a-table-column key="addr" title="地址" data-index="addr"/>
-        <a-table-column key="os_info" title="操作系统" data-index="os_info"/>
+        <a-table-column key="os" title="操作系统" data-index="os">
+          <template slot-scope="text, record">
+            <span v-if="text === 0">Windows</span>
+            <span v-else>Android</span>
+          </template>
+        </a-table-column>
         <a-table-column key="status" title="连接状态" data-index="status">
           <template slot-scope="text, record">
             <span v-if="text">已连接</span>
@@ -50,7 +55,7 @@
         <a-table-column key="action" title="操作">
           <template slot-scope="text, record">
             <a-space>
-              <a-button type="primary" v-if="!record.status" size="small" @click="showDownloadAgent(record.id)">下载 Agent</a-button>
+              <a-button type="primary" v-if="!record.status" size="small" @click="showDownloadAgent(record.id, record.os)">下载 Agent</a-button>
               <a-button type="primary" v-else size="small" @click="$router.push({ name: 'hostDetail', params: { id: record.id } })">控制</a-button>
               <a-button type="danger" size="small" @click="deleteHost(record.id)" :disabled="isDeleting">删除</a-button>
             </a-space>
@@ -76,12 +81,14 @@ export default {
       isCreating: false,
       isDownloadAgentVisible: false,
       isDeleting: false,
-      activeDownloadAgentId: ''
+      activeDownloadAgentId: '',
+      activeDownloadAgentOs: 0
     }
   },
   methods: {
-    showDownloadAgent (id) {
+    showDownloadAgent (id, os) {
       this.activeDownloadAgentId = id
+      this.activeDownloadAgentOs = os
       this.isDownloadAgentVisible = true
     },
     refreshList () {

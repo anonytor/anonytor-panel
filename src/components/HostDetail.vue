@@ -4,7 +4,7 @@
              :footer="null"
              :visible="isDownloadAgentVisible"
              @cancel="isDownloadAgentVisible = false">
-      <DownloadAgent :id="id"/>
+      <DownloadAgent :id="id" :os="host.os"/>
     </a-modal>
     <template v-if="!isNotFound">
       <a-page-header class="host-header"
@@ -32,7 +32,8 @@
             {{ host.addr }}
           </a-descriptions-item>
           <a-descriptions-item label="操作系统">
-            {{ host.os_info }}
+            <span v-if="host.os === 0">Windows</span>
+            <span v-else>Android</span>
           </a-descriptions-item>
           <a-descriptions-item label="状态">
             <a-tag color="green" v-if="host.status"><a-icon type="link" />已连接</a-tag>
@@ -44,10 +45,10 @@
         <a-col :md="15" :xs="24" style="margin-bottom: 10px">
           <a-card
             title="控制"
-            :tab-list="tabList"
+            :tab-list="controlTabList"
             :active-tab-key="activeTabKey" @tabChange="key => activeTabKey = key">
             <template v-if="host.status">
-              <template v-if="activeTabKey === 'windowsFile'">
+              <template v-if="activeTabKey === 'file'">
                 <a-row class="control-field">
                   <a-input-search placeholder="文件/目录路径" size="large">
                     <a-button slot="enterButton" type="primary">
@@ -60,10 +61,11 @@
                   <a-button type="primary" size="large" style="width: 100%">上传文件</a-button>
                 </a-row>
               </template>
-              <template v-else-if="activeTabKey === 'windowsKeyboard'">
+              <template v-else-if="activeTabKey === 'keyboard'">
                 <a-row class="control-field">
                   <a-button type="primary" size="large" style="width: 100%">开启实时显示</a-button>
                 </a-row>
+                <a-row class="control-field" style="text-align: center">Windows为键盘监听，Android为输入框监听</a-row>
                 <a-divider/>
                 <a-row class="control-field">
                   <a-button type="primary" size="large" style="width: 100%">开始日志记录</a-button>
@@ -72,7 +74,12 @@
                   <a-button size="large" style="width: 100%">查看日志记录</a-button>
                 </a-row>
               </template>
-              <template v-else-if="activeTabKey === 'windowsScreen'">
+              <template v-else-if="activeTabKey === 'clipboard'">
+                <a-row class="control-field">
+                  <a-button type="primary" size="large" style="width: 100%" @click="execute($const.cmd.getClipboard)">获取剪贴板</a-button>
+                </a-row>
+              </template>
+              <template v-else-if="activeTabKey === 'screen'">
                 <a-row class="control-field">
                   <a-button type="primary" size="large" style="width: 100%">获取当前截屏</a-button>
                 </a-row>
@@ -80,13 +87,20 @@
                   <a-button size="large" style="width: 100%">查看历史截屏</a-button>
                 </a-row>
               </template>
-              <template v-else-if="activeTabKey === 'windowsCommand'">
+              <template v-else-if="activeTabKey === 'command'">
                 <a-row class="control-field">
                   <a-input-search placeholder="命令" size="large">
-                    <a-button slot="enterButton" type="primary">
+                    <a-button slot="enterButton" type="primary" :disabled="host.os === 1">
                       执行命令
                     </a-button>
                   </a-input-search>
+                </a-row>
+              </template>
+              <template v-else-if="activeTabKey === 'notification'">
+                <a-row class="control-field">
+                  <a-row class="control-field">
+                    <a-button type="primary" size="large" style="width: 100%" :disabled="host.os === 0">开始监听通知</a-button>
+                  </a-row>
                 </a-row>
               </template>
             </template>
@@ -131,45 +145,36 @@ export default {
       isDeleting: false,
       isConnectionLoading: true,
       isDownloadAgentVisible: false,
+      isWaitingForTaskCreating: false,
       host: {},
       connections: [],
-      windowsControlTabList: [
+      controlTabList: [
         {
-          key: 'windowsFile',
+          key: 'file',
           tab: '文件'
         },
         {
-          key: 'windowsKeyboard',
-          tab: '键盘'
+          key: 'keyboard',
+          tab: '键盘/输入框'
         },
         {
-          key: 'windowsScreen',
+          key: 'clipboard',
+          tab: '剪贴板'
+        },
+        {
+          key: 'screen',
           tab: '屏幕'
         },
         {
-          key: 'windowsCommand',
+          key: 'command',
           tab: '命令'
+        },
+        {
+          key: 'notification',
+          tab: '通知'
         }
       ],
-      androidControlTabList: [
-        {
-          key: 'androidFile',
-          tab: '文件'
-        },
-        {
-          key: 'androidKeyboard',
-          tab: '键盘'
-        },
-        {
-          key: 'androidScreen',
-          tab: '屏幕'
-        },
-        {
-          key: 'androidCommand',
-          tab: '命令'
-        }
-      ],
-      activeTabKey: 'windowsFile'
+      activeTabKey: 'file'
     }
   },
   methods: {
@@ -178,7 +183,7 @@ export default {
       this.isNotFound = false
       api.host.getDetail(this.id)
         .then(res => {
-          this.activeTabKey = this.host.os_type === 0 ? 'windowsFile' : 'androidFile'
+          this.activeTabKey = 'file'
           this.host = res.data.host
           this.loadConnection()
         })
@@ -220,17 +225,25 @@ export default {
         .finally(() => {
           this.isDeleting = false
         })
+    },
+    execute (cmd) {
+      this.isWaitingForTaskCreating = true
+      api.task.create({ os: this.host.os, id: this.host.id, cmd })
+        .then((res) => {
+          this.$message.success(`任务 ${res.data.id} 创建成功`)
+          this.$router.push({ name: 'taskDetail', params: { hostId: this.host.id, taskId: res.data.id } })
+        })
+        .catch(() => {
+          this.$message.error('尝试执行任务失败')
+        })
+        .finally(() => {
+          this.isWaitingForTaskCreating = false
+        })
     }
   },
   computed: {
     id () {
       return this.$route.params.id
-    },
-    tabList () {
-      if (!this.host.status) {
-        return []
-      }
-      return this.host.os_type === 0 ? this.windowsControlTabList : this.androidControlTabList
     }
   },
   watch: {

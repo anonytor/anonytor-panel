@@ -5,6 +5,7 @@ import Dashboard from '../components/Dashboard'
 import HostList from '../components/HostList'
 import TokenList from '../components/TokenList'
 import HostDetail from '../components/HostDetail'
+import TaskDetail from '../components/TaskDetail'
 
 Vue.use(Router)
 
@@ -34,6 +35,11 @@ export default new Router({
           path: 'token',
           name: 'tokenList',
           component: TokenList
+        },
+        {
+          path: 'task/:hostId/:taskId',
+          name: 'taskDetail',
+          component: TaskDetail
         }
       ]
     }

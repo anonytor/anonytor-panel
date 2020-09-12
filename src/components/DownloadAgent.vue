@@ -1,14 +1,14 @@
 <template>
-  <a-spin :spinning="isLoading" tip="正在编译 Agent">
-    <a-row type="flex" justify="space-around">
-      <a-col :span="6">
-        <a-card hoverable :bordered="false" style="text-align: center" @click="download('android')">
+  <a-spin :spinning="isLoading" tip="正在生成 Agent">
+    <a-row type="flex" justify="center">
+      <a-col :span="6" v-if="os === 1">
+        <a-card hoverable :bordered="false" style="text-align: center" @click="download(1)">
           <a-icon type="android" slot="cover" class="icon icon-android"/>
           <a-card-meta title="Android"/>
         </a-card>
       </a-col>
-      <a-col :span="6">
-        <a-card hoverable :bordered="false" style="text-align: center" @click="download('windows')">
+      <a-col :span="6" v-else>
+        <a-card hoverable :bordered="false" style="text-align: center" @click="download(0)">
           <a-icon type="windows" slot="cover" class="icon icon-windows"/>
           <a-card-meta title="Windows"/>
         </a-card>
@@ -24,7 +24,8 @@
 export default {
   name: 'DownloadAgent',
   props: {
-    id: String
+    id: String,
+    os: Number
   },
   data () {
     return {
@@ -33,20 +34,25 @@ export default {
   },
   methods: {
     download (os) {
+      if (this.os !== os) {
+        return
+      }
       this.isLoading = true
     }
   }
 }
 </script>
 
-<style scoped>
+<style>
 .icon {
   font-size: 50px;
   padding-top: 20px;
 }
+
 .icon-android {
   color: #3eda84;
 }
+
 .icon-windows {
   color: #0179d7;
 }

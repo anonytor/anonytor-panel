@@ -3,6 +3,16 @@
     <a-form-model-item label="名称">
       <a-input v-model="name" :disabled="isCreating"></a-input>
     </a-form-model-item>
+    <a-form-model-item label="操作系统">
+      <a-select v-model="os">
+        <a-select-option value="0">
+          Windows
+        </a-select-option>
+        <a-select-option value="1">
+          Android
+        </a-select-option>
+      </a-select>
+    </a-form-model-item>
   </a-form-model>
 </template>
 
@@ -15,13 +25,14 @@ export default {
   },
   data () {
     return {
-      name: ''
+      name: '',
+      os: '0'
     }
   },
   methods: {
     create () {
       this.$emit('update:isCreating', true)
-      api.host.create({ name: this.name })
+      api.host.create({ name: this.name, os: parseInt(this.os) })
         .then(res => {
           this.$message.success(`成功创建主机 ${res.data.id}`)
           this.$emit('created')
