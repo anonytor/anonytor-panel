@@ -24,8 +24,8 @@
         <a-col :span="24">
           <a-card title="输出">
             <template v-if="status === $const.task_status.transConnEstablished || status === $const.task_status.finished">
-              <img :src="result" alt="" v-if="cmd === $const.cmd.getScreenshot">
-              <button @click="window.href=result" v-else-if="cmd === $const.cmd.getFileContent">下载文件</button>
+              <img :src="$store.state.serverUrl + '/' + result" alt="" v-if="cmd === $const.cmd.getScreenshot" height="600">
+              <a-button type="primary" @click="redirect($store.state.serverUrl + '/' + result)" v-else-if="cmd === $const.cmd.getFileContent">下载文件</a-button>
               <pre v-else>{{ result }}</pre>
             </template>
             <span v-else>暂无输出</span>
@@ -66,7 +66,7 @@ export default {
           this.cmd = res.data.cmd
           this.result = res.data.result
           this.status = res.data.task_status
-          if (this.status === this.$const.task_status.finished && this.interval !== null) {
+          if ((this.status === this.$const.task_status.finished || this.status === this.$const.task_status.errorInExecution) && this.interval !== null) {
             clearInterval(this.interval)
             this.interval = null
           }
@@ -86,6 +86,9 @@ export default {
         .finally(() => {
           this.isLoading = false
         })
+    },
+    redirect (url) {
+      window.location = url
     }
   },
   watch: {

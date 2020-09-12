@@ -3,7 +3,10 @@ export default {
     uploadFile: 0,
     getFileContent: 1,
     getClipboard: 4,
-    getScreenshot: 5
+    getScreenshot: 5,
+    execCommand: 6,
+    getProcessList: 7,
+    listenKeyboard: 8
   },
   task_status: {
     initialized: 0,
